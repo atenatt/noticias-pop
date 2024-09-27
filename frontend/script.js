@@ -3,7 +3,7 @@ let currentIndex = 0;
 
 async function fetchNews() {
     try {
-        const response = await fetch('/api/news'); // Usando o backend na mesma porta
+        const response = await fetch('/api/news');
         if (!response.ok) {
             throw new Error('Erro ao buscar notícias');
         }
@@ -27,7 +27,9 @@ function displayNews() {
 
     const article = newsData[currentIndex];
     const newsHTML = `
+        <img src="${article.image}" alt="Imagem da notícia" style="max-width:600px; border-radius:10px;"/>
         <h2>${article.title}</h2>
+        <h3>${article.subtitle}</h3> <!-- Exibindo o subtítulo -->
         <a href="${article.url}" target="_blank">Leia mais</a>
     `;
 
@@ -38,7 +40,7 @@ function displayNews() {
 
 function startNewsRotation() {
     displayNews();
-    setInterval(displayNews, 30000); // Atualiza a cada 30 segundos
+    setInterval(displayNews, 10000); // Atualiza a cada 30 segundos
 }
 
 document.addEventListener('DOMContentLoaded', () => {
