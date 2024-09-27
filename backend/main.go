@@ -4,50 +4,63 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
+    "strings"
 
     "github.com/gocolly/colly"
 )
 
 type News struct {
     Title     string `json:"title"`
-    Subtitle  string `json:"subtitle"`
     URL       string `json:"url"`
     Image     string `json:"image"`
 }
 
-func scrapeNews() ([]News, error) {
+func scrapeTecmundo() ([]News, error) {
     var newsList []News
 
     c := colly.NewCollector()
 
-    // Extrair as notícias, incluindo título, subtítulo, URL e imagem
-    c.OnHTML(".feed-post-body", func(e *colly.HTMLElement) {
-        title := e.ChildText(".feed-post-link")
-        subtitle := e.ChildText(".feed-post-body-resumo p") // Captura do subtítulo corrigida
-        url := e.ChildAttr(".feed-post-link", "href")
-        image := e.ChildAttr("img", "src")
+    // Visitar as páginas de novidades do Tecmundo
+    baseURL := "https://www.tecmundo.com.br/novidades"
+    for page := 1; page <= 5; page++ { // Iterar nas páginas 1 a 5
+        url := fmt.Sprintf("%s?page=%d", baseURL, page)
+        c.Visit(url)
 
-        newsList = append(newsList, News{
-            Title:    title,
-            Subtitle: subtitle,
-            URL:      url,
-            Image:    image,
+        // Extrair as notícias de cada página
+        c.OnHTML(".tec--list__item", func(e *colly.HTMLElement) {
+            title := e.ChildAttr(".tec--card__thumb__link", "title")
+            newsURL := e.ChildAttr(".tec--card__thumb__link", "href")
+            image := e.ChildAttr(".tec--card__thumb__image", "data-src")
+
+            // Se o `data-src` não estiver presente, tente capturar o `src`
+            if image == "" {
+                image = e.ChildAttr(".tec--card__thumb__image", "src")
+            }
+
+            // Alterar a resolução da imagem para 1024x768
+            image = strings.Replace(image, "ims=164x118", "ims=1080x720", 1)
+
+            // Remover o prefixo "Ir para:" do título, se estiver presente
+            title = strings.TrimPrefix(title, "Ir para: ")
+
+            newsList = append(newsList, News{
+                Title: title,
+                URL:   newsURL,
+                Image: image,
+            })
         })
-    })
+    }
 
     // Erro de scraping
     c.OnError(func(_ *colly.Response, err error) {
         fmt.Println("Erro durante o scraping:", err)
     })
 
-    // Visitar o site do G1
-    c.Visit("https://g1.globo.com/")
-
     return newsList, nil
 }
 
 func getNews(w http.ResponseWriter, r *http.Request) {
-    news, err := scrapeNews()
+    news, err := scrapeTecmundo()
     if err != nil {
         http.Error(w, "Erro ao fazer scraping das notícias", http.StatusInternalServerError)
         return

@@ -29,8 +29,7 @@ function displayNews() {
     const newsHTML = `
         <img src="${article.image}" alt="Imagem da notícia" style="max-width:600px; border-radius:10px;"/>
         <h2>${article.title}</h2>
-        <h3>${article.subtitle}</h3> <!-- Exibindo o subtítulo -->
-        <a href="${article.url}" target="_blank">Leia mais</a>
+        <a href="${article.url}" target="_blank">Saiba mais</a>
     `;
 
     newsContainer.innerHTML = newsHTML;
@@ -40,7 +39,7 @@ function displayNews() {
 
 function startNewsRotation() {
     displayNews();
-    setInterval(displayNews, 10000); // Atualiza a cada 30 segundos
+    setInterval(displayNews, 10000); // Atualiza a cada 10 segundos
 }
 
 document.addEventListener('DOMContentLoaded', () => {
